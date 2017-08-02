@@ -1,0 +1,76 @@
+﻿<Window x:Class="Lab3.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Lab3"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="611.429" Width="711.905" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Open"
+                        Executed="loadContentToCanvas"
+                        CanExecute="canLoadContentToCanvas"/>
+        <CommandBinding Command="ApplicationCommands.Help"
+                        Executed="helpExecuted"
+                        CanExecute="canHelpExecute"/>
+        <CommandBinding Command="ApplicationCommands.Save"
+                        Executed="saveContentFromCanvas"
+                        CanExecute="canSaveContentFromCanvas"/>
+    </Window.CommandBindings>
+    <DockPanel LastChildFill="True" Margin="3,3,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Menu x:Name="Menu" Height="40" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
+            <MenuItem Header="File" Height="40" Width="100">
+                <MenuItem Header="Save" Height="40" Command="ApplicationCommands.Save"/>
+                <MenuItem Header="Open" Height="40" Command="ApplicationCommands.Open"/>
+            </MenuItem>
+            <MenuItem Header="Edit" Height="40" Width="100">
+                <!-- Implement Move, MoveTo, Scale, Perimeter, Square, ToString for figures
+                    GetInfo(ToString), Unite(Merge), MoveFigures, MoveImage, Scale -->
+                <MenuItem Header="Edit Mode" Height="40" IsCheckable="True" Click="EditSwitch_Click" IsChecked="False"></MenuItem>
+                <MenuItem Header="Move" Height="40" Click="MenuItem_Click" IsEnabled="False"></MenuItem>
+                <MenuItem Header="Rotate" Height="40" IsEnabled="False"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Help" Height="40" Width="100">
+                <MenuItem Header="What is going on?" Height="40" Command="ApplicationCommands.Help"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <StatusBar x:Name="StatusBar" Height="40" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
+            <StatusBarItem>
+                <TextBlock Name="StatusBarText" Text=""/>
+            </StatusBarItem>
+        </StatusBar>
+        <ToolBarTray x:Name="ToolbarTray" Width="100" DockPanel.Dock="Left" VerticalAlignment="Stretch" Orientation="Vertical" Margin="0,0,0,0">
+            <ToolBar x:Name="DrawButtonsToolbar" VerticalAlignment="Stretch">
+                <Button x:Name="NewImage" Width="80" Height="80" Margin="10" IsEnabled="True" Click="NewImage_Click">
+                    <Button.Content>
+                        CreateImage
+                    </Button.Content>
+                </Button>
+                <Button x:Name="Triangle" Width="80" Height="80" Margin="10" IsEnabled="False" Click="Triangle_Click">
+                    <Button.Content>
+                        DrawTriangle
+                    </Button.Content>
+                </Button>
+                <Button x:Name="RectangularTriangle" Width="80" Height="80" Margin="10" IsEnabled="False" Click="RectangularTriangle_Click">
+                    <Button.Content>
+                        Rectangular
+                        Triangle
+                    </Button.Content>
+                </Button>
+                <Button x:Name="RegualarTriangle" Width="80" Height="80" Margin="10" IsEnabled="False" Click="RegualarTriangle_Click">
+                    <Button.Content>
+                        Regualar
+                        Triangle
+                    </Button.Content>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+        <Canvas Name="DrawingField" Background="White" x:FieldModifier="public"
+                MouseLeftButtonDown="DrawingField_LeftMouseDown"
+                MouseMove="DrawingField_MouseMove"
+                MouseLeftButtonUp="DrawingField_MouseLeftButtonUp">
+
+            
+        </Canvas>
+    </DockPanel>
+</Window>
