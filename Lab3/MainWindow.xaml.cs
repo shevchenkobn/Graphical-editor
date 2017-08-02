@@ -32,18 +32,37 @@ namespace Lab3
             _model.SetCanvas(DrawingField);
 
             _model.ImageCurrentStatusLost += _model_ImageCurrentStatusLost;
+            _model.ImageCurrentStatusLost += DeactivateAllButtons;
             _model.ImageCurrentStatusGot += _model_ImageCurrentStatusGot;
+            _model.ImageCurrentStatusGot += ActivateAllButtons;
             _model.FigureCurrentStatusLost += _model_FigureCurrentStatusLost;
             _model.FigureCurrentStatusGot += _model_FigureCurrentStatusGot;
         }
 
+        private void DeactivateAllButtons(IDrawingManager manager, Border image)
+        {
+            var buttons = DrawButtonsToolbar.Items;
+            foreach (var button in buttons)
+                if (button != NewImage)
+                    (button as UIElement).IsEnabled = false;
+        }
+
+        private void ActivateAllButtons(IDrawingManager manager, Border image)
+        {
+            var buttons = DrawButtonsToolbar.Items;
+            foreach (var button in buttons)
+                (button as UIElement).IsEnabled = true;
+        }
+
         private void _model_FigureCurrentStatusGot(IDrawingManager manager, Shape figure)
         {
-            if (!manager.IsOperationInProcess())
+            if (!manager.IsOperationInProcess)
             {
                 figure.Stroke = manager.Preferences.FigureStroke;
                 figure.StrokeThickness = manager.Preferences.FigureStrokeThickness;
             }
+            else
+                _model_FigureCurrentStatusLost(manager, figure);
         }
 
         private void _model_FigureCurrentStatusLost(IDrawingManager manager, Shape figure)
@@ -55,11 +74,13 @@ namespace Lab3
 
         private void _model_ImageCurrentStatusGot(IDrawingManager manager, Border image)
         {
-            if (!manager.IsOperationInProcess())
+            if (!manager.IsOperationInProcess)
             {
-                image.BorderBrush = manager.Preferences.FocusedImageBorder;
+                image.BorderBrush = manager.Preferences.FocusedImageBorderBrush;
                 image.BorderThickness = manager.Preferences.FocusedImageBorderThickness;
             }
+            else
+                _model_ImageCurrentStatusLost(manager, image);
         }
 
         private void _model_ImageCurrentStatusLost(IDrawingManager manager, Border image)
@@ -69,12 +90,12 @@ namespace Lab3
             image.Background = manager.Preferences.ImageBackground;
         }
 
-        private void helpExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void HelpExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             MessageBox.Show(this, helpText, helpCapture);
         }
 
-        private void canHelpExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void CanHelpExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = true;
         }
@@ -85,22 +106,22 @@ namespace Lab3
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void canLoadContentToCanvas(object sender, CanExecuteRoutedEventArgs e)
+        private void CanLoadContentToCanvas(object sender, CanExecuteRoutedEventArgs e)
         {
 
         }
 
-        private void loadContentToCanvas(object sender, ExecutedRoutedEventArgs e)
+        private void LoadContentToCanvas(object sender, ExecutedRoutedEventArgs e)
         {
 
         }
 
-        private void saveContentFromCanvas(object sender, ExecutedRoutedEventArgs e)
+        private void SaveContentFromCanvas(object sender, ExecutedRoutedEventArgs e)
         {
 
         }
 
-        private void canSaveContentFromCanvas(object sender, CanExecuteRoutedEventArgs e)
+        private void CanSaveContentFromCanvas(object sender, CanExecuteRoutedEventArgs e)
         {
 
         }

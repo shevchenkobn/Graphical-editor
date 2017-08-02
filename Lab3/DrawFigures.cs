@@ -69,15 +69,16 @@ namespace Lab3
             public ImageDrawingState(IChangeDrawingState subject) : base(subject)
             {
                 _firstPoint = new Point();
-                _image = subject.CurrentImage;
 
                 StartAction = (Point mouseDownPosition) =>
                 {
                     _firstPoint = mouseDownPosition;
-                    //subject.CurrentImage = new Border() { Height = 0, Width = 0, BorderBrush = preferences.ImageBorder, BorderThickness = new Thickness(1) };
-                    Canvas.SetLeft(subject.CurrentImage, mouseDownPosition.X);
-                    Canvas.SetTop(subject.CurrentImage, mouseDownPosition.Y);
-                    subject.Canvas.Children.Add(subject.CurrentImage);
+                    _image = new Border() { Height = 0, Width = 0 };
+
+                    Canvas.SetLeft(_image, mouseDownPosition.X);
+                    Canvas.SetTop(_image, mouseDownPosition.Y);
+                    subject.Canvas.Children.Add(_image);
+                    subject.CurrentImage = _image;
                 };
 
                 ContinueAction = (Point currentCursorPosition) =>
@@ -88,17 +89,15 @@ namespace Lab3
                         _image.Width = width;
                     else
                     {
-                        double t = Math.Abs(width);
-                        _image.Width = t;
-                        Canvas.SetLeft(_image, _firstPoint.X += width);
+                        _image.Width = Math.Abs(width);
+                        Canvas.SetLeft(_image, _firstPoint.X + width);
                     }
                     if (height >= 0)
                         _image.Height = height;
                     else
                     {
-                        double t = Math.Abs(height);
-                        _image.Height = t;
-                        Canvas.SetTop(_image, _firstPoint.Y += t);
+                        _image.Height = Math.Abs(height);
+                        Canvas.SetTop(_image, _firstPoint.Y + height);
                     }
                 };
 
@@ -152,14 +151,17 @@ namespace Lab3
             public TriangleDrawingState(IChangeDrawingState subject) : base(subject)
             {
                 _trianglePoints = new PointCollection();
+
                 _startActions = new Dictionary<int, EditorAction>(2);
 
                 _startActions[0] = (mouseDownPosition) =>
                 {
-                    subject.CurrentFigure = new Polyline();// { Stroke = preferences.FigureStroke };
+                    var polyline = new Polyline();
+                    (subject.CurrentImage.Child as Canvas).Children.Add(polyline);
+                    subject.CurrentFigure = polyline;
+                    _trianglePoints = new PointCollection();
                     _trianglePoints.Add(mouseDownPosition);
                     (subject.CurrentFigure as Polyline).Points = _trianglePoints;
-                    (subject.CurrentImage.Child as Canvas).Children.Add(subject.CurrentFigure);
                 };
                 _startActions[2] = (mouseDownPosition) =>
                 {
@@ -178,7 +180,8 @@ namespace Lab3
                     Canvas.SetTop(triangle, Canvas.GetTop(subject.CurrentFigure));
                     Canvas.SetLeft(triangle, Canvas.GetLeft(subject.CurrentFigure));
                     image.Children.Remove(subject.CurrentFigure);
-                    image.Children.Add(subject.CurrentFigure = triangle);
+                    image.Children.Add(triangle);
+                    subject.CurrentFigure = triangle;
                     // We can focus this figure or not
                     //subject.CurrentFigure.Focus();
                 };
@@ -199,29 +202,33 @@ namespace Lab3
                 };
                 _continueActions[3] = (currentCursorPosition) =>
                 {
-                    (subject.CurrentFigure as Polyline).Points[2] = currentCursorPosition;
+                    (subject.CurrentFigure as Polygon).Points[2] = currentCursorPosition;
                 };
-                ContinueAction = (mouseDownPosition) =>
+                ContinueAction = (currentCursorPosition) =>
                 {
-                    _continueActions[_trianglePoints.Count](mouseDownPosition);
+                    if (subject.IsOperationInProcess && subject.Canvas.CaptureMouse())
+                        _continueActions[_trianglePoints.Count](currentCursorPosition);
                 };
 
                 FinishAction = (mouseUpPosition) =>
                 {
-                    if (_trianglePoints.Count == 3
-                        && PositionOfPointYToLineBySegment(_trianglePoints[0], _trianglePoints[1], _trianglePoints[2]) != 0)
+                    if (_trianglePoints.Count == 3)
                     {
-                        (subject.CurrentImage.Child as Canvas).Children.Remove(subject.CurrentFigure);
-                        subject.CurrentFigure = null;
+                         if (PositionOfPointYToLineBySegment(_trianglePoints[0], _trianglePoints[1], _trianglePoints[2]) == 0)
+                         {
+                             (subject.CurrentImage.Child as Canvas).Children.Remove(subject.CurrentFigure);
+                             subject.CurrentFigure = null;
+                         }
+                         Reset();
                     }
-                    Reset();
+                    subject.Canvas.ReleaseMouseCapture();
                 };
             }
 
             public override void Reset()
             {
                 base.Reset();
-                _trianglePoints.Clear();
+                _trianglePoints = new PointCollection();
             }
             protected Point MiddleOfSegment(Point a, Point b)
             {
@@ -242,16 +249,23 @@ namespace Lab3
         class RectanglularTriangleDrawingState : TriangleDrawingState
         {
             EditorAction _startDrawing3PointBase;
+            EditorAction _continueDrawing3Base;
             public RectanglularTriangleDrawingState(IChangeDrawingState subject) : base(subject)
             {
                 _startDrawing3PointBase = _startActions[2];
                 _startActions[2] = (mouseDownPosition) =>
                 {
-                    _startDrawing3PointBase(rectangleTriangle3Point(_trianglePoints, mouseDownPosition));
+                    _startDrawing3PointBase(RectangleTriangle3Point(_trianglePoints, mouseDownPosition));
+                };
+
+                _continueDrawing3Base = _continueActions[3];
+                _continueActions[3] = (mouseDownPosition) =>
+                {
+                    _continueDrawing3Base(RectangleTriangle3Point(_trianglePoints, mouseDownPosition));
                 };
             }
 
-            Point rectangleTriangle3Point(PointCollection points, Point mouseDownPosition)
+            Point RectangleTriangle3Point(PointCollection points, Point mouseDownPosition)
             {
                 Point O = MiddleOfSegment(points[0], points[1]);
                 double R = DistanceBetweenPoints(O, points[1]);
@@ -264,17 +278,24 @@ namespace Lab3
 
         class RegularTriangleDrawingState : TriangleDrawingState
         {
-            EditorAction startDrawing3PointBase;
+            EditorAction _startDrawing3PointBase;
+            EditorAction _continueDrawing3PointBase;
             public RegularTriangleDrawingState(IChangeDrawingState subject) : base(subject)
             {
-                startDrawing3PointBase = _startActions[2];
+                _startDrawing3PointBase = _startActions[2];
                 _startActions[2] = (mouseDownPosition) =>
                 {
-                    startDrawing3PointBase(regularTriangle3Point(_trianglePoints, mouseDownPosition));
+                    _startDrawing3PointBase(RegularTriangle3Point(_trianglePoints, mouseDownPosition));
+                };
+
+                _continueDrawing3PointBase = _continueActions[3];
+                _continueActions[3] = (mouseDownPosition) =>
+                {
+                    _continueDrawing3PointBase(RegularTriangle3Point(_trianglePoints, mouseDownPosition));
                 };
             }
 
-            Point regularTriangle3Point(PointCollection points, Point mouseDownPosition)
+            Point RegularTriangle3Point(PointCollection points, Point mouseDownPosition)
             {
                 Point p1, p2;
                 if (points[0].X > points[1].X)

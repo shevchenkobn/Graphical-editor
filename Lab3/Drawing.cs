@@ -38,7 +38,7 @@ namespace Lab3
         void StartAction(Point mouseDownPosition);
         void ContinueAction(Point currentMousePosition);
         void FinishAction(Point mouseUpPosition);
-        bool IsOperationInProcess();
+        bool IsOperationInProcess { get; }
     }
     public class EditorPreferences
     {
@@ -47,7 +47,7 @@ namespace Lab3
         public double FigureStrokeThickness { get; set; } = 1;
         public Thickness FocusedImageBorderThickness { get; set; } = new Thickness(2);
         public double FigureFocusBorder { get; set; } = 2;
-        public Brush FocusedImageBorder { get; set; } = Brushes.SeaGreen;
+        public Brush FocusedImageBorderBrush { get; set; } = Brushes.SeaGreen;
         public Brush FigureStroke { get; set; } = Brushes.SteelBlue;
         public Brush FigureFilling { get; set; } = Brushes.Transparent;//LightSeaGreen;
         public Brush FigureBackground { get; set; } = Brushes.Transparent;
@@ -87,7 +87,7 @@ namespace Lab3
     {
         Canvas _canvas;
         bool _isActionStarted;
-        Canvas IChangeDrawingState.Canvas { get; }
+        Canvas IChangeDrawingState.Canvas { get => _canvas; }
         EditorState _state;
         EditorPreferences _preferences;
         public EditorPreferences Preferences { get { return _preferences; } }
@@ -124,18 +124,20 @@ namespace Lab3
             _states[EditorMode.MergeImages] = new MergeImagesState(this);
             //////
 
+            _state = _states[EditorMode.Undefined];
             CurrentMode = EditorMode.Undefined;
         }
 
         public event EditorModeChangedEventHandler EditorModeChanged;
+        private EditorMode _currentMode;
         public EditorMode CurrentMode {
-            get => CurrentMode;
+            get => _currentMode;
 
             set
             {
                 if (_canvas != null)
                 {
-                    CurrentMode = value;
+                    _currentMode = value;
                     EditorModeChanged?.Invoke(this, value);
                     SwitchState(value);
                 }
@@ -146,14 +148,17 @@ namespace Lab3
             get => _currentFigure;
             set
             {
-                if (value != null && (_currentImage?.Child as Canvas).Children.Contains(_currentFigure = value))
+                if (value != null && (_currentImage?.Child as Canvas).Children.Contains(value) || value == null)
                 {
                     if (_currentFigure != null)
                     {
                         FigureCurrentStatusLost?.Invoke(this, _currentFigure);
                     }
                     _currentFigure = value;
-                    FigureCurrentStatusGot?.Invoke(this, _currentFigure);
+                    if (_currentFigure != null)
+                    {
+                        FigureCurrentStatusGot?.Invoke(this, _currentFigure);
+                    }
                 }
             }
         }
@@ -165,14 +170,15 @@ namespace Lab3
             get => _currentImage;
             set
             {
-                if (value != null && _canvas.Children.Contains(value))
+                if (value != null && _canvas.Children.Contains(value) || value == null)
                 {
                     if (_currentImage != null)
                     {
                         ImageCurrentStatusLost?.Invoke(this, _currentImage);
                     }
                     _currentImage = value;
-                    ImageCurrentStatusGot?.Invoke(this, _currentImage);
+                    if (_currentImage != null)
+                        ImageCurrentStatusGot?.Invoke(this, _currentImage);
                 }
             }
         }
@@ -182,15 +188,15 @@ namespace Lab3
         
         public void StartAction(MouseEventArgs e)
         {
-            _state.StartAction(_state.GetMousePostition(e));
             _isOperationInProcess = true;
             _isActionStarted = true;
+            _state.StartAction(_state.GetMousePostition(e));
         }
         public void StartAction(Point mouseDownPosition)
         {
-            _state.StartAction(mouseDownPosition);
             _isOperationInProcess = true;
             _isActionStarted = true;
+            _state.StartAction(mouseDownPosition);
         }
 
         public void ContinueAction(MouseEventArgs e)
@@ -208,18 +214,27 @@ namespace Lab3
         {
             if (_isActionStarted)
                 _state.FinishAction(_state.GetMousePostition(e));
+            _isActionStarted = false;
         }
         public void FinishAction(Point mouseUpPosition)
         {
             if (_isActionStarted)
                 _state.FinishAction(mouseUpPosition);
+            _isActionStarted = false;
         }
 
         bool _isOperationInProcess;
-        bool IChangeDrawingState.IsOperationInProcess { get => _isOperationInProcess; set => _isOperationInProcess = value; }
-        public bool IsOperationInProcess()
+        public bool IsOperationInProcess
         {
-            return _isOperationInProcess;
+            get => _isOperationInProcess;
+            set
+            {
+                _isOperationInProcess = value;
+                if (_currentImage != null)
+                    ImageCurrentStatusGot?.Invoke(this, _currentImage);
+                if (_currentFigure != null)
+                    FigureCurrentStatusGot?.Invoke(this, _currentFigure);
+            }
         }
 
         public void SetCanvas(Canvas canvas)
