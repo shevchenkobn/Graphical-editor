@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Input;
+using System.Diagnostics;
 
 namespace Lab3
 {
@@ -34,6 +35,7 @@ namespace Lab3
                 StartAction = new EditorAction((MouseDownPosition) => { });
                 ContinueAction = new EditorAction((currentMousePosition) => { });
                 FinishAction = new EditorAction((mouseUpPostion) => { });
+                _subject.IsOperationInProcess = true;
             }
             public virtual void Reset()
             {
@@ -53,11 +55,56 @@ namespace Lab3
             }
         }
 
-        // Stub state class
-        class UndefinedState : EditorState
+        // Stub state class also used to switch elements
+        class SwitchElementState : EditorState
         {
-            public UndefinedState(DrawingManager subject) : base(subject)
+            MouseEventArgs _e;
+            public SwitchElementState(DrawingManager subject) : base(subject)
             {
+                _subject.IsOperationInProcess = false;
+                FinishAction = (mouseUpPosition) =>
+                {
+                    var images = _subject.Canvas.Children;
+                    Border image = null;
+                    for (int i = images.Count - 1; i >= 0; i--)
+                    {
+                        image = images[i] as Border;
+                        if (image != null)
+                        {
+                            //Debug.WriteLine("{0} {1} {2} {3}", image.IsMouseOver, image.IsMouseDirectlyOver, image.IsHitTestVisible, image == _subject.CurrentImage);
+                            var position = Mouse.GetPosition(image);
+                            if (position.X > 0 && position.Y > 0 && position.X < Canvas.GetLeft(image) + image.Width &&
+                                position.Y < Canvas.GetTop(image) + image.Height)
+                                //if (Mouse.DirectlyOver == image)
+                                break;
+                        }
+                        image = null;
+                    }
+                    if (image != null)
+                    {
+                        _subject.CurrentImage = image;
+                        var figures = (image.Child as Canvas).Children;
+                        Shape figure = null;
+                        for (int i = figures.Count - 1; i >= 0; i--)
+                        {
+                            figure = figures[i] as Shape;
+                            if (figure != null)
+                            {
+                                if (figure.IsMouseOver)
+                                    break;
+                            }
+                            figure = null;
+                        }
+                        if (figure != null)
+                            _subject.CurrentFigure = figure;
+                    }
+                };
+            }
+
+            public override Point GetMousePostition(MouseEventArgs e)
+            {
+                _e = e;
+                return e.GetPosition(_subject.Canvas);
             }
         }
 
@@ -103,7 +150,9 @@ namespace Lab3
 
                 FinishAction = (mouseUpPosition) =>
                 {
-                    if (_image.Width == 0 || _image.Height == 0)
+                    if (_image.Width == 0 || _image.Height == 0 ||
+                         _image.BorderThickness.Left + _image.BorderThickness.Right >= _image.Width ||
+                         _image.BorderThickness.Top + _image.BorderThickness.Bottom >= _image.Height)
                     {
                         subject.Canvas.Children.Remove(_image);
                     }
@@ -206,8 +255,7 @@ namespace Lab3
                 };
                 ContinueAction = (currentCursorPosition) =>
                 {
-                    if (subject.IsOperationInProcess && subject.Canvas.CaptureMouse())
-                        _continueActions[_trianglePoints.Count](currentCursorPosition);
+                    _continueActions[_trianglePoints.Count](currentCursorPosition);
                 };
 
                 FinishAction = (mouseUpPosition) =>
@@ -221,7 +269,6 @@ namespace Lab3
                          }
                          Reset();
                     }
-                    subject.Canvas.ReleaseMouseCapture();
                 };
             }
 
@@ -566,8 +613,8 @@ namespace Lab3
                         currentMousePosition.Y - _previousMousePosition.Y
                     );
 
-                    Canvas.SetLeft(subject.Canvas, Canvas.GetLeft(subject.CurrentImage) + delta.X);
-                    Canvas.SetTop(subject.Canvas, Canvas.GetTop(subject.CurrentImage) + delta.Y);
+                    Canvas.SetLeft(subject.CurrentImage, Canvas.GetLeft(subject.CurrentImage) + delta.X);
+                    Canvas.SetTop(subject.CurrentImage, Canvas.GetTop(subject.CurrentImage) + delta.Y);
 
                     _previousMousePosition = currentMousePosition;
                 };

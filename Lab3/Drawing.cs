@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Shapes;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace Lab3
 {
     public enum EditorMode
     {
-        Undefined,
+        SwitchElements,
         DrawImage,
         DrawTriangle, DrawRectangularTriangle, DrawRegularTriangle,
         RotateFigure, MoveFigure, MoveImage, ScaleFigure, MergeImages
@@ -46,23 +42,12 @@ namespace Lab3
         public Thickness ImageBorderThickness { get; set; } = new Thickness(1);
         public double FigureStrokeThickness { get; set; } = 1;
         public Thickness FocusedImageBorderThickness { get; set; } = new Thickness(2);
-        public double FigureFocusBorder { get; set; } = 2;
+        public double FigureActiveStrokeThickness { get; set; } = 2;
         public Brush FocusedImageBorderBrush { get; set; } = Brushes.SeaGreen;
         public Brush FigureStroke { get; set; } = Brushes.SteelBlue;
         public Brush FigureFilling { get; set; } = Brushes.Transparent;//LightSeaGreen;
         public Brush FigureBackground { get; set; } = Brushes.Transparent;
         public Brush ImageBackground { get; set; } = Brushes.White;
-        //public RoutedEventHandler ImageBorder_GotFocus { get; set; } = (o, e) =>
-        //{
-
-        //};
-        //public RoutedEventHandler ImageBorder_LostFocus { get; set; }
-        //public MouseButtonEventHandler ImageBorder_PreviewMouseLeftButtonDown { get; set; } = (o, e) =>
-        //{
-        //    (o as Border).Focus();
-        //};
-        //public RoutedEventHandler Figure_GotFocus { get; set; }
-        //public RoutedEventHandler Figure_LostFocus { get; set; }
     }
     interface IChangeDrawingState
     {
@@ -108,7 +93,7 @@ namespace Lab3
         {
             _preferences = new EditorPreferences();
             _states = new Dictionary<EditorMode, EditorState>();
-            _states[EditorMode.Undefined] = new UndefinedState(this);
+            _states[EditorMode.SwitchElements] = new SwitchElementState(this);
 
             // Initialize all state classes here
             _states[EditorMode.DrawImage] = new ImageDrawingState(this);
@@ -124,8 +109,8 @@ namespace Lab3
             _states[EditorMode.MergeImages] = new MergeImagesState(this);
             //////
 
-            _state = _states[EditorMode.Undefined];
-            CurrentMode = EditorMode.Undefined;
+            _state = _states[EditorMode.SwitchElements];
+            CurrentMode = EditorMode.SwitchElements;
         }
 
         public event EditorModeChangedEventHandler EditorModeChanged;
@@ -188,21 +173,18 @@ namespace Lab3
         
         public void StartAction(MouseEventArgs e)
         {
-            _isOperationInProcess = true;
-            _isActionStarted = true;
-            _state.StartAction(_state.GetMousePostition(e));
+            StartAction(_state.GetMousePostition(e));
         }
         public void StartAction(Point mouseDownPosition)
         {
-            _isOperationInProcess = true;
             _isActionStarted = true;
             _state.StartAction(mouseDownPosition);
+            _canvas.CaptureMouse();
         }
 
         public void ContinueAction(MouseEventArgs e)
         {
-            if (_isActionStarted)
-                _state.ContinueAction(_state.GetMousePostition(e));
+            ContinueAction(_state.GetMousePostition(e));
         }
         public void ContinueAction(Point currentMousePosition)
         {
@@ -212,15 +194,14 @@ namespace Lab3
 
         public void FinishAction(MouseEventArgs e)
         {
-            if (_isActionStarted)
-                _state.FinishAction(_state.GetMousePostition(e));
-            _isActionStarted = false;
+            FinishAction(_state.GetMousePostition(e));
         }
         public void FinishAction(Point mouseUpPosition)
         {
             if (_isActionStarted)
                 _state.FinishAction(mouseUpPosition);
             _isActionStarted = false;
+            _canvas.ReleaseMouseCapture();
         }
 
         bool _isOperationInProcess;
@@ -241,6 +222,7 @@ namespace Lab3
         {
             if (_canvas == null)
             {
+                canvas.ClipToBounds = true;
                 _canvas = canvas;
             }
         }

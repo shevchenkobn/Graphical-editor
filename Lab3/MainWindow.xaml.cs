@@ -132,7 +132,7 @@ namespace Lab3
             if (_model.CurrentMode != EditorMode.DrawImage)
                 _model.CurrentMode = EditorMode.DrawImage;
             else
-                _model.CurrentMode = EditorMode.Undefined;
+                _model.CurrentMode = EditorMode.SwitchElements;
         }
 
         private void Triangle_Click(object sender, RoutedEventArgs e)
@@ -140,7 +140,7 @@ namespace Lab3
             if (_model.CurrentMode != EditorMode.DrawTriangle)
                 _model.CurrentMode = EditorMode.DrawTriangle;
             else
-                _model.CurrentMode = EditorMode.Undefined;
+                _model.CurrentMode = EditorMode.SwitchElements;
         }
 
         private void RectangularTriangle_Click(object sender, RoutedEventArgs e)
@@ -148,7 +148,7 @@ namespace Lab3
             if (_model.CurrentMode != EditorMode.DrawRectangularTriangle)
                 _model.CurrentMode = EditorMode.DrawRectangularTriangle;
             else
-                _model.CurrentMode = EditorMode.Undefined;
+                _model.CurrentMode = EditorMode.SwitchElements;
         }
 
         private void RegualarTriangle_Click(object sender, RoutedEventArgs e)
@@ -156,7 +156,7 @@ namespace Lab3
             if (_model.CurrentMode != EditorMode.DrawRegularTriangle)
                 _model.CurrentMode = EditorMode.DrawRegularTriangle;
             else
-                _model.CurrentMode = EditorMode.Undefined;
+                _model.CurrentMode = EditorMode.SwitchElements;
         }
 
         internal void DrawingField_LeftMouseDown(object sender, MouseButtonEventArgs e)
@@ -172,6 +172,14 @@ namespace Lab3
         private void DrawingField_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             _model.FinishAction(e);
+        }
+
+        private void MoveImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (_model.CurrentMode != EditorMode.MoveImage)
+                _model.CurrentMode = EditorMode.MoveImage;
+            else
+                _model.CurrentMode = EditorMode.SwitchElements;
         }
     }
 }

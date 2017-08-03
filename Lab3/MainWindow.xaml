@@ -26,7 +26,7 @@
             <MenuItem Header="Edit" Height="40" Width="100">
                 <!-- Implement Move, MoveTo, Scale, Perimeter, Square, ToString for figures
                     GetInfo(ToString), Unite(Merge), MoveFigures, MoveImage, Scale -->
-                <MenuItem Header="Move" Height="40" IsEnabled="True"></MenuItem>
+                <MenuItem Header="Move Image" Height="40" IsEnabled="True" Click="MoveImage_Click"></MenuItem>
                 <MenuItem Header="Rotate" Height="40" IsEnabled="True"></MenuItem>
             </MenuItem>
             <MenuItem Header="Help" Height="40" Width="100">
