@@ -28,6 +28,7 @@ namespace Lab3
         public MainWindow()
         {
             InitializeComponent();
+
             _model = DrawingManager.Instance;
             _model.SetCanvas(DrawingField);
 
@@ -58,8 +59,8 @@ namespace Lab3
         {
             if (!manager.IsOperationInProcess)
             {
-                figure.Stroke = manager.Preferences.FigureStroke;
-                figure.StrokeThickness = manager.Preferences.FigureStrokeThickness;
+                figure.Stroke = manager.Preferences.CurrentFigureStroke;
+                figure.StrokeThickness = manager.Preferences.CurrentFigureStrokeThickness;
             }
             else
                 _model_FigureCurrentStatusLost(manager, figure);
@@ -76,8 +77,8 @@ namespace Lab3
         {
             if (!manager.IsOperationInProcess)
             {
-                image.BorderBrush = manager.Preferences.FocusedImageBorderBrush;
-                image.BorderThickness = manager.Preferences.FocusedImageBorderThickness;
+                image.BorderBrush = manager.Preferences.CurrentImageBorderBrush;
+                image.BorderThickness = manager.Preferences.CurrentImageBorderThickness;
             }
             else
                 _model_ImageCurrentStatusLost(manager, image);
@@ -87,7 +88,7 @@ namespace Lab3
         {
             image.BorderBrush = manager.Preferences.ImageBorder;
             image.BorderThickness = manager.Preferences.ImageBorderThickness;
-            image.Background = manager.Preferences.ImageBackground;
+            (image.Child as Canvas).Background = manager.Preferences.ImageCanvasBackground;
         }
 
         private void HelpExecuted(object sender, ExecutedRoutedEventArgs e)

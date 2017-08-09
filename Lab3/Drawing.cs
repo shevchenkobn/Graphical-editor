@@ -40,14 +40,18 @@ namespace Lab3
     {
         public Brush ImageBorder { get; set; } = Brushes.SteelBlue;
         public Thickness ImageBorderThickness { get; set; } = new Thickness(1);
+        public Brush ImageCanvasBackground { get; set; } = Brushes.White;
+
+        public Thickness CurrentImageBorderThickness { get; set; } = new Thickness(2);
+        public Brush CurrentImageBorderBrush { get; set; } = Brushes.SeaGreen;
+
         public double FigureStrokeThickness { get; set; } = 1;
-        public Thickness FocusedImageBorderThickness { get; set; } = new Thickness(2);
-        public double FigureActiveStrokeThickness { get; set; } = 2;
-        public Brush FocusedImageBorderBrush { get; set; } = Brushes.SeaGreen;
         public Brush FigureStroke { get; set; } = Brushes.SteelBlue;
         public Brush FigureFilling { get; set; } = Brushes.Transparent;//LightSeaGreen;
         public Brush FigureBackground { get; set; } = Brushes.Transparent;
-        public Brush ImageBackground { get; set; } = Brushes.White;
+
+        public Brush CurrentFigureStroke { get; set; } = Brushes.SteelBlue;
+        public double CurrentFigureStrokeThickness { get; set; } = 2;
     }
     interface IChangeDrawingState
     {
@@ -222,8 +226,11 @@ namespace Lab3
         {
             if (_canvas == null)
             {
-                canvas.ClipToBounds = true;
                 _canvas = canvas;
+                _canvas.ClipToBounds = true;
+                _canvas.IsHitTestVisible = true;
+                if (_canvas.Background == null)
+                    _canvas.Background = Brushes.Transparent;
             }
         }
 

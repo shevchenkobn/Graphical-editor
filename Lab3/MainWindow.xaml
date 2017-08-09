@@ -67,7 +67,7 @@
         <Canvas Name="DrawingField" Background="White" x:FieldModifier="public"
                 MouseLeftButtonDown="DrawingField_LeftMouseDown"
                 MouseMove="DrawingField_MouseMove"
-                MouseLeftButtonUp="DrawingField_MouseLeftButtonUp">
+                PreviewMouseLeftButtonUp="DrawingField_MouseLeftButtonUp">
 
             
         </Canvas>

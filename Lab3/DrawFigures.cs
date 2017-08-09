@@ -58,7 +58,6 @@ namespace Lab3
         // Stub state class also used to switch elements
         class SwitchElementState : EditorState
         {
-            MouseEventArgs _e;
             public SwitchElementState(DrawingManager subject) : base(subject)
             {
                 _subject.IsOperationInProcess = false;
@@ -71,12 +70,12 @@ namespace Lab3
                         image = images[i] as Border;
                         if (image != null)
                         {
-                            //Debug.WriteLine("{0} {1} {2} {3}", image.IsMouseOver, image.IsMouseDirectlyOver, image.IsHitTestVisible, image == _subject.CurrentImage);
+                            Debug.WriteLine("Image {0}", image.IsMouseOver);
                             var position = Mouse.GetPosition(image);
-                            if (position.X > 0 && position.Y > 0 && position.X < Canvas.GetLeft(image) + image.Width &&
-                                position.Y < Canvas.GetTop(image) + image.Height)
-                                //if (Mouse.DirectlyOver == image)
-                                break;
+                            //if (position.X > 0 && position.Y > 0 && position.X < Canvas.GetLeft(image) + image.Width &&
+                            //    position.Y < Canvas.GetTop(image) + image.Height)
+                            if (image.IsMouseOver)
+                                    break;
                         }
                         image = null;
                     }
@@ -88,6 +87,7 @@ namespace Lab3
                         for (int i = figures.Count - 1; i >= 0; i--)
                         {
                             figure = figures[i] as Shape;
+                            Debug.WriteLine("Figure {0}", figure.IsMouseOver);
                             if (figure != null)
                             {
                                 if (figure.IsMouseOver)
@@ -103,7 +103,6 @@ namespace Lab3
 
             public override Point GetMousePostition(MouseEventArgs e)
             {
-                _e = e;
                 return e.GetPosition(_subject.Canvas);
             }
         }
@@ -120,12 +119,16 @@ namespace Lab3
                 StartAction = (Point mouseDownPosition) =>
                 {
                     _firstPoint = mouseDownPosition;
-                    _image = new Border() { Height = 0, Width = 0 };
+                    _image = new Border() {
+                        Height = 0,
+                        Width = 0,
+                        Background = Brushes.Transparent
+                    };
 
                     Canvas.SetLeft(_image, mouseDownPosition.X);
                     Canvas.SetTop(_image, mouseDownPosition.Y);
-                    subject.Canvas.Children.Add(_image);
-                    subject.CurrentImage = _image;
+                    _subject.Canvas.Children.Add(_image);
+                    _subject.CurrentImage = _image;
                 };
 
                 ContinueAction = (Point currentCursorPosition) =>
@@ -151,26 +154,26 @@ namespace Lab3
                 FinishAction = (mouseUpPosition) =>
                 {
                     if (_image.Width == 0 || _image.Height == 0 ||
-                         _image.BorderThickness.Left + _image.BorderThickness.Right >= _image.Width ||
-                         _image.BorderThickness.Top + _image.BorderThickness.Bottom >= _image.Height)
+                            _image.BorderThickness.Left + _image.BorderThickness.Right >= _image.Width ||
+                            _image.BorderThickness.Top + _image.BorderThickness.Bottom >= _image.Height)
                     {
-                        subject.Canvas.Children.Remove(_image);
+                        _subject.Canvas.Children.Remove(_image);
                     }
                     else
                     {
                         //hm... maybe some other manipulations needed before these
-                        //image.BorderThickness = preferences.ImageBorderThickness;
-                        //image.BorderBrush = preferences.ImageBorder;
                         //image.Focusable = true;
                         _image.Child = new Canvas()
                         {
                             //Background = preferences.ImageBackground,
                             Width = _image.Width - _image.BorderThickness.Left - _image.BorderThickness.Right,
                             Height = _image.Height - _image.BorderThickness.Top - _image.BorderThickness.Bottom,
-                            ClipToBounds = true
+                            Background = Brushes.Transparent,
+                            ClipToBounds = true,
+                            IsHitTestVisible = true
                         };
                         // We can focus this image or not
-                        subject.CurrentImage = _image;
+                        _subject.CurrentImage = _image;
                         //image.Focus();
                     }
                     // Here we can either switch to UndefinedState or reset all the variables
@@ -206,11 +209,11 @@ namespace Lab3
                 _startActions[0] = (mouseDownPosition) =>
                 {
                     var polyline = new Polyline();
-                    (subject.CurrentImage.Child as Canvas).Children.Add(polyline);
-                    subject.CurrentFigure = polyline;
+                    (_subject.CurrentImage.Child as Canvas).Children.Add(polyline);
+                    _subject.CurrentFigure = polyline;
                     _trianglePoints = new PointCollection();
                     _trianglePoints.Add(mouseDownPosition);
-                    (subject.CurrentFigure as Polyline).Points = _trianglePoints;
+                    (_subject.CurrentFigure as Polyline).Points = _trianglePoints;
                 };
                 _startActions[2] = (mouseDownPosition) =>
                 {
@@ -225,12 +228,12 @@ namespace Lab3
                         Focusable = true
                     };
                     triangle.Points = _trianglePoints;
-                    var image = subject.CurrentImage.Child as Canvas;
-                    Canvas.SetTop(triangle, Canvas.GetTop(subject.CurrentFigure));
-                    Canvas.SetLeft(triangle, Canvas.GetLeft(subject.CurrentFigure));
-                    image.Children.Remove(subject.CurrentFigure);
+                    var image = _subject.CurrentImage.Child as Canvas;
+                    Canvas.SetTop(triangle, Canvas.GetTop(_subject.CurrentFigure));
+                    Canvas.SetLeft(triangle, Canvas.GetLeft(_subject.CurrentFigure));
+                    image.Children.Remove(_subject.CurrentFigure);
                     image.Children.Add(triangle);
-                    subject.CurrentFigure = triangle;
+                    _subject.CurrentFigure = triangle;
                     // We can focus this figure or not
                     //subject.CurrentFigure.Focus();
                 };
@@ -243,15 +246,15 @@ namespace Lab3
 
                 _continueActions[1] = (currentCursorPosition) =>
                 {
-                    (subject.CurrentFigure as Polyline).Points.Add(currentCursorPosition);
+                    (_subject.CurrentFigure as Polyline).Points.Add(currentCursorPosition);
                 };
                 _continueActions[2] = (currentCursorPosition) =>
                 {
-                    (subject.CurrentFigure as Polyline).Points[1] = currentCursorPosition;
+                    (_subject.CurrentFigure as Polyline).Points[1] = currentCursorPosition;
                 };
                 _continueActions[3] = (currentCursorPosition) =>
                 {
-                    (subject.CurrentFigure as Polygon).Points[2] = currentCursorPosition;
+                    (_subject.CurrentFigure as Polygon).Points[2] = currentCursorPosition;
                 };
                 ContinueAction = (currentCursorPosition) =>
                 {
@@ -264,8 +267,8 @@ namespace Lab3
                     {
                          if (PositionOfPointYToLineBySegment(_trianglePoints[0], _trianglePoints[1], _trianglePoints[2]) == 0)
                          {
-                             (subject.CurrentImage.Child as Canvas).Children.Remove(subject.CurrentFigure);
-                             subject.CurrentFigure = null;
+                             (_subject.CurrentImage.Child as Canvas).Children.Remove(_subject.CurrentFigure);
+                             _subject.CurrentFigure = null;
                          }
                          Reset();
                     }
