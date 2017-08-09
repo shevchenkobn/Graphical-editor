@@ -35,11 +35,16 @@
         </Menu>
         <StatusBar x:Name="StatusBar" Height="40" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
             <StatusBarItem>
-                <TextBlock Name="StatusBarText" Text=""/>
+                <TextBlock Name="StatusBarText" Text="Use buttons on the left to draw"/>
             </StatusBarItem>
         </StatusBar>
         <ToolBarTray x:Name="ToolbarTray" Width="100" DockPanel.Dock="Left" VerticalAlignment="Stretch" Orientation="Vertical" Margin="0,0,0,0">
             <ToolBar x:Name="DrawButtonsToolbar" VerticalAlignment="Stretch">
+                <Button x:Name="SwitchElements" Width="80" Height="80" Margin="10" IsEnabled="True" Click="SwitchElements_Click">
+                    <Button.Content>
+                        SwitchCurrentElement
+                    </Button.Content>
+                </Button>
                 <Button x:Name="NewImage" Width="80" Height="80" Margin="10" IsEnabled="True" Click="NewImage_Click">
                     <Button.Content>
                         CreateImage
@@ -56,20 +61,23 @@
                         Triangle
                     </Button.Content>
                 </Button>
-                <Button x:Name="RegualarTriangle" Width="80" Height="80" Margin="10" IsEnabled="False" Click="RegualarTriangle_Click">
+                <Button x:Name="RegularTriangle" Width="80" Height="80" Margin="10" IsEnabled="False" Click="RegualarTriangle_Click">
                     <Button.Content>
-                        Regualar
+                        Regular
                         Triangle
                     </Button.Content>
                 </Button>
             </ToolBar>
         </ToolBarTray>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"  HorizontalScrollBarVisibility="Auto">
         <Canvas Name="DrawingField" Background="White" x:FieldModifier="public"
                 MouseLeftButtonDown="DrawingField_LeftMouseDown"
                 MouseMove="DrawingField_MouseMove"
-                PreviewMouseLeftButtonUp="DrawingField_MouseLeftButtonUp">
+                PreviewMouseLeftButtonUp="DrawingField_MouseLeftButtonUp"
+                Width="4096" Height="3072">
 
             
         </Canvas>
+        </ScrollViewer>
     </DockPanel>
 </Window>

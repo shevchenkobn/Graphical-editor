@@ -26,6 +26,8 @@ namespace Lab3
             protected Dictionary<int, EditorAction> _startActions;
             protected Dictionary<int, EditorAction> _continueActions;
             protected Dictionary<int, EditorAction> _finishActions;
+            protected bool _captureMouse;
+            public bool CaptureMouse { get => _captureMouse; }
             public EditorAction StartAction;
             public EditorAction ContinueAction;
             public EditorAction FinishAction;
@@ -36,6 +38,7 @@ namespace Lab3
                 ContinueAction = new EditorAction((currentMousePosition) => { });
                 FinishAction = new EditorAction((mouseUpPostion) => { });
                 _subject.IsOperationInProcess = true;
+                _captureMouse = true;
             }
             public virtual void Reset()
             {
@@ -58,9 +61,11 @@ namespace Lab3
         // Stub state class also used to switch elements
         class SwitchElementState : EditorState
         {
+
             public SwitchElementState(DrawingManager subject) : base(subject)
             {
                 _subject.IsOperationInProcess = false;
+                _captureMouse = false;
                 FinishAction = (mouseUpPosition) =>
                 {
                     var images = _subject.Canvas.Children;
@@ -70,10 +75,7 @@ namespace Lab3
                         image = images[i] as Border;
                         if (image != null)
                         {
-                            Debug.WriteLine("Image {0}", image.IsMouseOver);
                             var position = Mouse.GetPosition(image);
-                            //if (position.X > 0 && position.Y > 0 && position.X < Canvas.GetLeft(image) + image.Width &&
-                            //    position.Y < Canvas.GetTop(image) + image.Height)
                             if (image.IsMouseOver)
                                     break;
                         }
@@ -87,7 +89,6 @@ namespace Lab3
                         for (int i = figures.Count - 1; i >= 0; i--)
                         {
                             figure = figures[i] as Shape;
-                            Debug.WriteLine("Figure {0}", figure.IsMouseOver);
                             if (figure != null)
                             {
                                 if (figure.IsMouseOver)
@@ -168,7 +169,7 @@ namespace Lab3
                             //Background = preferences.ImageBackground,
                             Width = _image.Width - _image.BorderThickness.Left - _image.BorderThickness.Right,
                             Height = _image.Height - _image.BorderThickness.Top - _image.BorderThickness.Bottom,
-                            Background = Brushes.Transparent,
+                            Background = _subject.Canvas.Background,
                             ClipToBounds = true,
                             IsHitTestVisible = true
                         };

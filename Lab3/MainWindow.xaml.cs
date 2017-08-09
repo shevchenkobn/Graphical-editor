@@ -21,10 +21,12 @@ namespace Lab3
     /// </summary>
     public partial class MainWindow : Window
     {
-        const string helpText = "Use toolbar on the left and menus on the top to draw some elements.";
-        const string helpCapture = "Help";
+        const string HelpText = "Use toolbar on the left and menus on the top to draw some elements.";
+        const string HelpCapture = "Help";
+
+        const string DefaultStatusBarContent = "Use buttons on the left to draw";
+        Dictionary<EditorMode, string> _statusBarOptions;
         protected IDrawingManager _model;
-        const string defaultStatusBarContent = "Use buttons on the left to draw";
         public MainWindow()
         {
             InitializeComponent();
@@ -38,6 +40,26 @@ namespace Lab3
             _model.ImageCurrentStatusGot += ActivateAllButtons;
             _model.FigureCurrentStatusLost += _model_FigureCurrentStatusLost;
             _model.FigureCurrentStatusGot += _model_FigureCurrentStatusGot;
+
+            _statusBarOptions = new Dictionary<EditorMode, string>()
+            {
+                {EditorMode.SwitchElements, "Click on objects to focus them" },
+                {EditorMode.DrawImage, "Draw new Image by mouse" },
+                {EditorMode.DrawTriangle, "Draw new triangle by mouse" },
+                {EditorMode.DrawRegularTriangle, "Draw new regular triagnle by mouse" },
+                {EditorMode.DrawRectangularTriangle, "Draw new rectangular triangle by mouse" },
+                {EditorMode.MoveFigure, "Move focused figure using your mouse" },
+                {EditorMode.MoveImage, "Move focused Image using your mouse" },
+                {EditorMode.RotateFigure, "Rotate focused figure around arbitrary center" },
+                {EditorMode.ScaleFigure, "Scale focused image relatively to an center" },
+                {EditorMode.MergeImages, "Merge some other image into focused one" }
+            };
+            _model.EditorModeChanged += _model_EditorModeChanged;
+        }
+
+        private void _model_EditorModeChanged(IDrawingManager manager, EditorMode newMode)
+        {
+            StatusBarText.Text = _statusBarOptions[newMode];
         }
 
         private void DeactivateAllButtons(IDrawingManager manager, Border image)
@@ -79,6 +101,8 @@ namespace Lab3
             {
                 image.BorderBrush = manager.Preferences.CurrentImageBorderBrush;
                 image.BorderThickness = manager.Preferences.CurrentImageBorderThickness;
+                if (image.Child != null)
+                    (image.Child as Canvas).Background = manager.Preferences.ImageCanvasBackground;
             }
             else
                 _model_ImageCurrentStatusLost(manager, image);
@@ -88,12 +112,11 @@ namespace Lab3
         {
             image.BorderBrush = manager.Preferences.ImageBorder;
             image.BorderThickness = manager.Preferences.ImageBorderThickness;
-            (image.Child as Canvas).Background = manager.Preferences.ImageCanvasBackground;
         }
 
         private void HelpExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            MessageBox.Show(this, helpText, helpCapture);
+            MessageBox.Show(this, HelpText, HelpCapture);
         }
 
         private void CanHelpExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -181,6 +204,11 @@ namespace Lab3
                 _model.CurrentMode = EditorMode.MoveImage;
             else
                 _model.CurrentMode = EditorMode.SwitchElements;
+        }
+
+        private void SwitchElements_Click(object sender, RoutedEventArgs e)
+        {
+            _model.CurrentMode = EditorMode.SwitchElements;
         }
     }
 }

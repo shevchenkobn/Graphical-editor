@@ -183,7 +183,8 @@ namespace Lab3
         {
             _isActionStarted = true;
             _state.StartAction(mouseDownPosition);
-            _canvas.CaptureMouse();
+            if (_state.CaptureMouse)
+                _canvas.CaptureMouse();
         }
 
         public void ContinueAction(MouseEventArgs e)
@@ -205,7 +206,8 @@ namespace Lab3
             if (_isActionStarted)
                 _state.FinishAction(mouseUpPosition);
             _isActionStarted = false;
-            _canvas.ReleaseMouseCapture();
+            if (_state.CaptureMouse)
+                _canvas.ReleaseMouseCapture();
         }
 
         bool _isOperationInProcess;
