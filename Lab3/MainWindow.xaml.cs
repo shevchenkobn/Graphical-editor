@@ -210,5 +210,13 @@ namespace Lab3
         {
             _model.CurrentMode = EditorMode.SwitchElements;
         }
+
+        private void RotateFigure_Click(object sender, RoutedEventArgs e)
+        {
+            if (_model.CurrentMode != EditorMode.RotateFigure)
+                _model.CurrentMode = EditorMode.RotateFigure;
+            else
+                _model.CurrentMode = EditorMode.SwitchElements;
+        }
     }
 }

@@ -67,7 +67,7 @@ namespace Lab3
         // Method to remove service point
         void RemoveServicePoint(Ellipse servicePoint);
         void MoveServicePoint(Ellipse servicePoint, Point center, Canvas imagePlot = null);
-        Transform AddRenderTransform(Transform transfrom);
+        void AddRenderTransform(Transform transfrom);
         bool IsOperationInProcess { get; set; }
         //void ChangeCurrentImage(Border image);
         //void ChangeCurrentFigure(Shape figure);

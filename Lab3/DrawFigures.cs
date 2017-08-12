@@ -75,7 +75,6 @@ namespace Lab3
                         image = images[i] as Border;
                         if (image != null)
                         {
-                            var position = Mouse.GetPosition(image);
                             if (image.IsMouseOver)
                                     break;
                         }
@@ -411,7 +410,7 @@ namespace Lab3
                 Fill = Brushes.White
             };
             Canvas.SetLeft(servicePoint, center.X - servicePoint.Width / 2);
-            Canvas.SetLeft(servicePoint, center.Y - servicePoint.Height / 2);
+            Canvas.SetTop(servicePoint, center.Y - servicePoint.Height / 2);
             _canvas.Children.Add(servicePoint);
             return servicePoint;
         }
@@ -433,7 +432,7 @@ namespace Lab3
                 throw new InvalidOperationException("Given image is invalid");
             }
             Canvas.SetLeft(servicePoint, coordinates.X - servicePoint.Width / 2);
-            Canvas.SetLeft(servicePoint, coordinates.Y - servicePoint.Height / 2);
+            Canvas.SetTop(servicePoint, coordinates.Y - servicePoint.Height / 2);
         }
 
         void IChangeDrawingState.RemoveServicePoint(Ellipse servicePoint)
@@ -443,29 +442,39 @@ namespace Lab3
 
         class RotateFigureState : EditorState
         {
+            MouseEventArgs _cursor;
             KeyValuePair<Point, Ellipse> _centerPoint;
+            double _basicMouseAngle;
+            double _rotatedAngle;
             RotateTransform _rotateTransform;
             int _counter;
             public RotateFigureState(IChangeDrawingState subject) : base(subject)
             {
                 _counter = 1;
 
+                _startActions = new Dictionary<int, EditorAction>(2);
+                _startActions[1] = (mouseDownPosition) =>
+                {
+                    _centerPoint = new KeyValuePair<Point, Ellipse>(
+                        mouseDownPosition,
+                        _subject.SetServicePoint(_cursor.GetPosition(_subject.Canvas))
+                    );
+                };
+                _startActions[2] = (mouseDownPosition) =>
+                {
+                    _basicMouseAngle = GetNormalizedAngle(_centerPoint.Key, mouseDownPosition);
+                    _rotatedAngle = _rotateTransform.Angle;
+                };
                 StartAction = (mouseDownPosition) =>
                 {
-                    if (_counter == 1)
-                    {
-                        _centerPoint = new KeyValuePair<Point, Ellipse>(
-                            mouseDownPosition,
-                            subject.SetServicePoint(mouseDownPosition)
-                        );
-                    }
-                    
+                    _startActions[_counter](mouseDownPosition);
                 };
 
                 _continueActions = new Dictionary<int, EditorAction>(2);
                 _continueActions[1] = (currentMousePosition) =>
                 {
-                    subject.MoveServicePoint(_centerPoint.Value, currentMousePosition);
+                    var pointOnCanvas = _cursor.GetPosition(_subject.Canvas);
+                    _subject.MoveServicePoint(_centerPoint.Value, pointOnCanvas);
                     _centerPoint = new KeyValuePair<Point, Ellipse>(
                         currentMousePosition,
                         _centerPoint.Value
@@ -474,7 +483,7 @@ namespace Lab3
                 _continueActions[2] = (currentMousePosition) =>
                 {
                     double rotateAngle = GetNormalizedAngle(_centerPoint.Key, currentMousePosition);
-                    _rotateTransform.Angle += rotateAngle;
+                    _rotateTransform.Angle = (_rotatedAngle + RadToDegrees(rotateAngle - _basicMouseAngle)) % 360;
                 };
                 ContinueAction = (currentMousePosition) =>
                 {
@@ -485,10 +494,12 @@ namespace Lab3
                 {
                     if (_counter == 1)
                     {
-                        _rotateTransform = (RotateTransform)subject.AddRenderTransform(new RotateTransform(0, _centerPoint.Key.X, _centerPoint.Key.Y));
+                        _rotateTransform = new RotateTransform(0, _centerPoint.Key.X, _centerPoint.Key.Y);
+                        _subject.AddRenderTransform(_rotateTransform);
+                        _counter++;
                     }
                 };
-                subject.EditorModeChanged += (manager, newState) =>
+                _subject.EditorModeChanged += (manager, newState) =>
                 {
                     Reset();
                 };
@@ -501,37 +512,50 @@ namespace Lab3
                 _subject.RemoveServicePoint(_centerPoint.Value);
             }
 
-            double GetNormalizedAngle(Point p, Point center)
+            public override Point GetMousePostition(MouseEventArgs e)
+            {
+                _cursor = e;
+                return base.GetMousePostition(e);
+            }
+
+            double GetNormalizedAngle(Point center, Point p)
             {
                 double distance = DistanceBetweenPoints(p, center);
-                return GetNormalizedAngle(Math.Asin(p.Y / distance), Math.Acos(p.X / distance));
+                return GetNormalizedAngle(Math.Asin((p.Y - center.Y) / distance), Math.Acos((p.X - center.X) / distance));
             }
             double GetNormalizedAngle(double angleToXAxisBySin, double angleToXAxisByCos)
             {
+                if (double.IsNaN(angleToXAxisBySin) || double.IsNaN(angleToXAxisByCos))
+                    return 0;
                 double angleToXAxis;
-                if (angleToXAxisBySin > 0)
+                if (angleToXAxisBySin >= 0)
                 {
                     angleToXAxis = angleToXAxisByCos;
                 }
                 else
                 {
-                    if (angleToXAxisByCos < Math.PI / 2 && angleToXAxisByCos <= Math.PI)
+                    angleToXAxis = Math.PI;
+                    if (angleToXAxisByCos < Math.PI / 2)
                     {
-                        angleToXAxis = Math.PI - angleToXAxisBySin;
+                        angleToXAxis += angleToXAxisBySin + Math.PI;
                     }
                     else
                     {
-                        angleToXAxis = angleToXAxisBySin;
+                        angleToXAxis -=  angleToXAxisBySin;
                     }
                 }
                 return angleToXAxis;
             }
+            double RadToDegrees(double radians)
+            {
+                return radians * 180 / Math.PI;
+            }
         }
-        Transform IChangeDrawingState.AddRenderTransform(Transform transform)
+        void IChangeDrawingState.AddRenderTransform(Transform transform)
         {
-            return AddRenderTransform(transform);
+            AddRenderTransform(transform);
         }
-        Transform AddRenderTransform(Transform transform)
+        void AddRenderTransform(Transform transform)
         {
             TransformGroup transformGroup;
             if (_currentFigure.RenderTransform == null)
@@ -544,35 +568,13 @@ namespace Lab3
             {
                 var previousTransform = _currentFigure.RenderTransform;
                 transformGroup = new TransformGroup();
-                if (previousTransform.GetType() == transform.GetType())
-                {
-                    transformGroup.Children.Add(previousTransform);
-                }
-                else
-                {
-                    transform = previousTransform;
-                }
                 transformGroup.Children.Add(transform);
                 _currentFigure.RenderTransform = transformGroup;
             }
             else
             {
-                transformGroup = _currentFigure.RenderTransform as TransformGroup;
-                bool found = false;
-                var transformType = transform.GetType();
-                foreach (var transfrormFromGroup in transformGroup.Children)
-                {
-                    if (transfrormFromGroup.GetType() == transform.GetType())
-                    {
-                        transform = transfrormFromGroup;
-                        found = true;
-                        break;
-                    }
-                }
-                if (found)
-                    transformGroup.Children.Add(transform);
+                (_currentFigure.RenderTransform as TransformGroup).Children.Add(transform);
             }
-            return transform;
         }
 
         class MoveFigureState : EditorState
@@ -644,7 +646,7 @@ namespace Lab3
                 {
                     _centerPoint = new KeyValuePair<Point, Ellipse>(
                         mouseDownPosition,
-                        subject.SetServicePoint(mouseDownPosition)
+                        _subject.SetServicePoint(mouseDownPosition)
                     );
                 };
                 _startActions[2] = (mouseDownPoition) =>
@@ -659,7 +661,7 @@ namespace Lab3
                 _continueActions = new Dictionary<int, EditorAction>(2);
                 _continueActions[1] = (currentMousePosition) =>
                 {
-                    subject.MoveServicePoint(_centerPoint.Value, currentMousePosition);
+                    _subject.MoveServicePoint(_centerPoint.Value, currentMousePosition);
                     _centerPoint = new KeyValuePair<Point, Ellipse>(
                         currentMousePosition,
                         _centerPoint.Value
@@ -676,7 +678,8 @@ namespace Lab3
                 {
                     if (_counter == 1)
                     {
-                        _scaleTransform = (ScaleTransform)subject.AddRenderTransform(new ScaleTransform(1, 1, _centerPoint.Key.X, _centerPoint.Key.Y));
+                        _scaleTransform = new ScaleTransform(1, 1, _centerPoint.Key.X, _centerPoint.Key.Y);
+                        _subject.AddRenderTransform(_scaleTransform);
                         _counter++;
                     }
                 };
