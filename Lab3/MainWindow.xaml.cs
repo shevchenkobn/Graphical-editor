@@ -70,7 +70,7 @@ namespace Lab3
         {
             var buttons = DrawButtonsToolbar.Items;
             foreach (var button in buttons)
-                if (button != NewImage || button != SwitchElements)
+                if (!(button == NewImage || button == SwitchElements))
                     (button as UIElement).IsEnabled = false;
         }
 

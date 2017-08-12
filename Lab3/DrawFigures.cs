@@ -158,6 +158,7 @@ namespace Lab3
                             _image.BorderThickness.Top + _image.BorderThickness.Bottom >= _image.Height)
                     {
                         _subject.Canvas.Children.Remove(_image);
+                        _subject.CurrentImage = null;
                     }
                     else
                     {
