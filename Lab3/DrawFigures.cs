@@ -229,8 +229,8 @@ namespace Lab3
                     };
                     triangle.Points = _trianglePoints;
                     var image = _subject.CurrentImage.Child as Canvas;
-                    Canvas.SetTop(triangle, Canvas.GetTop(_subject.CurrentFigure));
-                    Canvas.SetLeft(triangle, Canvas.GetLeft(_subject.CurrentFigure));
+                    Canvas.SetTop(triangle, 0);
+                    Canvas.SetLeft(triangle, 0);
                     image.Children.Remove(_subject.CurrentFigure);
                     image.Children.Add(triangle);
                     _subject.CurrentFigure = triangle;
@@ -239,6 +239,8 @@ namespace Lab3
                 };
                 StartAction = (mouseDownPosition) =>
                 {
+                    if (_subject.CurrentImage == null)
+                        return;
                     _startActions[_trianglePoints.Count](mouseDownPosition);
                 };
 
@@ -258,11 +260,15 @@ namespace Lab3
                 };
                 ContinueAction = (currentCursorPosition) =>
                 {
+                    if (_subject.CurrentImage == null)
+                        return;
                     _continueActions[_trianglePoints.Count](currentCursorPosition);
                 };
 
                 FinishAction = (mouseUpPosition) =>
                 {
+                    if (_subject.CurrentImage == null)
+                        return;
                     if (_trianglePoints.Count == 3)
                     {
                          if (PositionOfPointYToLineBySegment(_trianglePoints[0], _trianglePoints[1], _trianglePoints[2]) == 0)
@@ -278,6 +284,11 @@ namespace Lab3
             public override void Reset()
             {
                 base.Reset();
+                if (_subject.CurrentFigure is Polyline)
+                {
+                    (_subject.CurrentImage.Child as Canvas).Children.Remove(_subject.CurrentFigure);
+                    _subject.CurrentFigure = null;
+                }
                 _trianglePoints = new PointCollection();
             }
             protected Point MiddleOfSegment(Point a, Point b)
@@ -286,13 +297,56 @@ namespace Lab3
             }
             protected int PositionOfPointYToLineBySegment(Point p1, Point p2, Point p)
             {
+                if (p1.X == p2.X)
+                {
+                    if (p.X < p1.X)
+                        return 1;
+                    else if (p.X > p1.X)
+                        return -1;
+                    else
+                        return 0;
+                }
                 double xPart = (p2.Y - p1.Y) * (p.X - p1.X) / (p2.X - p1.X) + p1.Y;
-                if (p.Y > xPart)
-                    return 1;
                 if (p.Y < xPart)
                     return -1;
+                if (p.Y > xPart)
+                    return 1;
                 else
                     return 0;
+            }
+            
+            private Point ClosestToCenter(PointCollection points)
+            {
+                Point center = new Point(0, 0);
+                Point closest = new Point(0, 0);
+                double distanceToClosest = double.MaxValue;
+                for (int i = 0; i < points.Count; i++)
+                {
+                    double currentDistance = DistanceBetweenPoints(center, points[i]);
+                    if (currentDistance < distanceToClosest)
+                    {
+                        distanceToClosest = currentDistance;
+                        closest = points[i];
+                    }
+                }
+                return closest;
+            }
+
+            private Point FarestFromCenter(PointCollection points)
+            {
+                Point center = new Point(0, 0);
+                Point farest = new Point(double.MaxValue, double.MaxValue);
+                double distanceToFarest = 0;
+                for (int i = 0; i < points.Count; i++)
+                {
+                    double currentDistance = DistanceBetweenPoints(center, points[i]);
+                    if (currentDistance > distanceToFarest)
+                    {
+                        distanceToFarest = currentDistance;
+                        farest = points[i];
+                    }
+                }
+                return farest;
             }
         }
 
@@ -584,19 +638,23 @@ namespace Lab3
             {
                 StartAction = (mouseDownPosition) =>
                 {
+                    if (_subject.CurrentFigure == null)
+                        return;
                     _previousMousePosition = mouseDownPosition;
                 };
 
                 ContinueAction = (currentMousePosition) =>
                 {
+                    if (_subject.CurrentFigure == null)
+                        return;
                     Point delta = new Point(
                         currentMousePosition.X - _previousMousePosition.X,
                         currentMousePosition.Y - _previousMousePosition.Y
                     );
 
                     // We won't diffenciate shapes and try doing so:
-                    Canvas.SetLeft(subject.CurrentFigure, Canvas.GetLeft(subject.CurrentFigure) + delta.X);
-                    Canvas.SetTop(subject.CurrentFigure, Canvas.GetTop(subject.CurrentFigure) + delta.Y);
+                    Canvas.SetLeft(_subject.CurrentFigure, Canvas.GetLeft(_subject.CurrentFigure) + delta.X);
+                    Canvas.SetTop(_subject.CurrentFigure, Canvas.GetTop(_subject.CurrentFigure) + delta.Y);
 
                     _previousMousePosition = currentMousePosition;
                 };
@@ -609,11 +667,15 @@ namespace Lab3
             {
                 StartAction = (mouseDownPosition) =>
                 {
+                    if (_subject.CurrentImage == null)
+                        return;
                     _previousMousePosition = mouseDownPosition;
                 };
 
                 ContinueAction = (currentMousePosition) =>
                 {
+                    if (_subject.CurrentImage == null)
+                        return;
                     Point delta = new Point(
                         currentMousePosition.X - _previousMousePosition.X,
                         currentMousePosition.Y - _previousMousePosition.Y
@@ -633,6 +695,7 @@ namespace Lab3
 
         class ScaleFigureState : EditorState
         {
+            MouseEventArgs _cursor;
             KeyValuePair<Point, Ellipse> _centerPoint;
             int _counter;
             Point _previousMousePosition;
@@ -646,7 +709,7 @@ namespace Lab3
                 {
                     _centerPoint = new KeyValuePair<Point, Ellipse>(
                         mouseDownPosition,
-                        _subject.SetServicePoint(mouseDownPosition)
+                        _subject.SetServicePoint(_cursor.GetPosition(_subject.Canvas))
                     );
                 };
                 _startActions[2] = (mouseDownPoition) =>
@@ -655,13 +718,16 @@ namespace Lab3
                 };
                 StartAction = (mouseDownPosition) =>
                 {
+                    if (_subject.CurrentFigure == null)
+                        return;
                     _startActions[_counter](mouseDownPosition);
                 };
 
                 _continueActions = new Dictionary<int, EditorAction>(2);
                 _continueActions[1] = (currentMousePosition) =>
                 {
-                    _subject.MoveServicePoint(_centerPoint.Value, currentMousePosition);
+                    var pointOnCanvas = _cursor.GetPosition(_subject.Canvas);
+                    _subject.MoveServicePoint(_centerPoint.Value, pointOnCanvas);
                     _centerPoint = new KeyValuePair<Point, Ellipse>(
                         currentMousePosition,
                         _centerPoint.Value
@@ -672,10 +738,19 @@ namespace Lab3
                     double k = DistanceBetweenPoints(_centerPoint.Key, currentMousePosition) /
                         DistanceBetweenPoints(_centerPoint.Key, _previousMousePosition);
                     _scaleTransform.ScaleX = _scaleTransform.ScaleY *= k;
+                    _previousMousePosition = currentMousePosition;
+                };
+                ContinueAction = (currentMousePosition) =>
+                {
+                    if (_subject.CurrentFigure == null)
+                        return;
+                    _continueActions[_counter](currentMousePosition);
                 };
 
                 FinishAction = (mouseUpPosition) =>
                 {
+                    if (_subject.CurrentFigure == null)
+                        return;
                     if (_counter == 1)
                     {
                         _scaleTransform = new ScaleTransform(1, 1, _centerPoint.Key.X, _centerPoint.Key.Y);
@@ -687,45 +762,78 @@ namespace Lab3
             public override void Reset()
             {
                 base.Reset();
+                _subject.RemoveServicePoint(_centerPoint.Value);
                 _counter = 1;
+            }
+
+            public override Point GetMousePostition(MouseEventArgs e)
+            {
+                _cursor = e;
+
+                return base.GetMousePostition(e);
             }
         }
 
         class MergeImagesState : EditorState
         {
-            MouseButtonEventHandler _captureSecondImage = (o, e) =>
-            {
-
-            };
             Border _secondImage;
             public MergeImagesState(IChangeDrawingState subject) : base(subject)
             {
+                _captureMouse = false;
                 StartAction = (mouseDownPosition) =>
                 {
+                    if (_subject.CurrentImage == null)
+                        return;
                     // Maybe not adding but replacing is needed
-                    subject.CurrentImage.MouseUp += _captureSecondImage;
                 };
 
-                FinishAction = (mouseDownPosition) =>
+                FinishAction = (mouseUpPosition) =>
                 {
-                    mergeSecondImageIntoFirst(subject.CurrentImage, _secondImage);
-                    subject.Canvas.Children.Remove(_secondImage);
-                    subject.CurrentImage.MouseUp -= _captureSecondImage;
+                    if (_subject.CurrentImage == null)
+                        return;
+                    SetSecondImageByMousePosition(mouseUpPosition);
+                    if (_secondImage != null && _secondImage != _subject.CurrentImage)
+                    {
+                        MergeSecondImageIntoFirst(subject.CurrentImage, _secondImage);
+                        subject.Canvas.Children.Remove(_secondImage);
+                    }
                 };
             }
 
-            // merge second image into first (current) image
-            void mergeSecondImageIntoFirst(Border firstImage, Border secondImage)
+            void SetSecondImageByMousePosition(Point mousePosition)
             {
-                firstImage.Width = Math.Max(firstImage.Width, secondImage.Width);
-                firstImage.Height = Math.Max(firstImage.Height, secondImage.Height);
+                var images = _subject.Canvas.Children;
+                for (int i = 0; i < images.Count; i++)
+                    if (images[i].IsMouseOver)
+                        _secondImage = images[i] as Border;
+            }
 
-                var firstImageFiguresCollection = (firstImage.Child as Canvas).Children;
-                foreach (var figure in (secondImage.Child as Canvas).Children)
+            // merge second image into first (current) image
+            void MergeSecondImageIntoFirst(Border firstImage, Border secondImage)
+            {
+                double maxWidth = Math.Max(firstImage.Width, secondImage.Width);
+                double maxHeight = Math.Max(firstImage.Height, secondImage.Height);
+                var firstCanvas = firstImage.Child as Canvas;
+                var secondCanvas = secondImage.Child as Canvas;
+                firstImage.Width = maxWidth;
+                firstCanvas.Width = maxWidth - firstImage.BorderThickness.Right - firstImage.BorderThickness.Left;
+                firstImage.Height = maxHeight;
+                firstCanvas.Height = maxHeight - firstImage.BorderThickness.Top - firstImage.BorderThickness.Bottom;
+
+                var firstImageFiguresCollection = firstCanvas.Children;
+                var secondImageChildren = secondCanvas.Children;
+                for (int i = 0; i < secondImageChildren.Count;)
                 {
                     // Assume that CanvasLeft and top are not changed
-                    firstImageFiguresCollection.Add((Shape)figure);
+                    var figure = (Shape)secondImageChildren[i];
+                    secondImageChildren.RemoveAt(i);
+                    firstImageFiguresCollection.Add(figure);
                 }
+            }
+
+            public override Point GetMousePostition(MouseEventArgs e)
+            {
+                return e.GetPosition(_subject.Canvas);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -34,6 +35,9 @@ namespace Lab3
         void StartAction(Point mouseDownPosition);
         void ContinueAction(Point currentMousePosition);
         void FinishAction(Point mouseUpPosition);
+        void DeleteCurrentImage();
+        void DeleteCurrentFigure();
+        void ClearCanvas();
         bool IsOperationInProcess { get; }
     }
     public class EditorPreferences
@@ -244,6 +248,36 @@ namespace Lab3
         void IChangeDrawingState.SwitchState(EditorMode newState)
         {
             SwitchState(newState);
+        }
+        void IDrawingManager.DeleteCurrentImage()
+        {
+            if (_currentImage != null)
+            {
+                var self = this as IChangeDrawingState;
+                if ((_currentImage.Child as Canvas).Children.Contains(_currentFigure))
+                    self.CurrentFigure = null;
+                _canvas.Children.Remove(_currentImage);
+                self.CurrentImage = null;
+                //CurrentMode = default(EditorMode);
+            }
+        }
+
+        void IDrawingManager.DeleteCurrentFigure()
+        {
+            if (_currentFigure != null)
+            {
+                (_currentFigure.Parent as Canvas).Children.Remove(_currentFigure);
+                (this as IChangeDrawingState).CurrentFigure = null;
+            }
+        }
+
+        void IDrawingManager.ClearCanvas()
+        {
+            var self = this as IChangeDrawingState;
+            self.CurrentFigure = null;
+            self.CurrentImage = null;
+            if (_canvas != null)
+                _canvas.Children.Clear();
         }
     }
 }
