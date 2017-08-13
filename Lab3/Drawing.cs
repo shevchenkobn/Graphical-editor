@@ -58,7 +58,7 @@ namespace Lab3
 
         public double FigureStrokeThickness { get; set; } = 1;
         public Brush FigureStroke { get; set; } = Brushes.SteelBlue;
-        public Brush FigureFilling { get; set; } = Brushes.Transparent;//LightSeaGreen;
+        public Brush FigureFilling { get; set; } = Brushes.Transparent;
         public Brush FigureBackground { get; set; } = Brushes.Transparent;
 
         public Brush CurrentFigureStroke { get; set; } = Brushes.SteelBlue;
@@ -71,7 +71,6 @@ namespace Lab3
         Shape CurrentFigure { get; set; }
         Border CurrentImage { get; set; }
         Canvas Canvas { get; }
-        //EditorPreferences Preferences { get; }
         // Setting of service point method
         // Service point is used to mark some aspects of editing, e.g. center of rotation
         Ellipse SetServicePoint(Point center, Canvas imagePlot = null);
@@ -268,7 +267,6 @@ namespace Lab3
                     self.CurrentFigure = null;
                 _canvas.Children.Remove(_currentImage);
                 self.CurrentImage = null;
-                //CurrentMode = default(EditorMode);
             }
         }
 

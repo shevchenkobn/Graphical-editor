@@ -161,7 +161,7 @@ namespace Lab3
             {
                 AddExtension = true,
                 FileName = "MyCanvas.gcanv",
-                //Filter = "All Supported Extensions | *.gimage; *.gcanv | Image | *.gimage | Entire canvas | *.gcanv",
+                
                 Filter = "Canvas file (.gcanv) | *.gcanv",
                 InitialDirectory = Directory.GetCurrentDirectory()
             };

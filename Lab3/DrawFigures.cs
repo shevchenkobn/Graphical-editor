@@ -162,23 +162,16 @@ namespace Lab3
                     }
                     else
                     {
-                        //hm... maybe some other manipulations needed before these
-                        //image.Focusable = true;
                         _image.Child = new Canvas()
                         {
-                            //Background = preferences.ImageBackground,
                             Width = _image.Width - _image.BorderThickness.Left - _image.BorderThickness.Right,
                             Height = _image.Height - _image.BorderThickness.Top - _image.BorderThickness.Bottom,
                             Background = _subject.Canvas.Background,
                             ClipToBounds = true,
                             IsHitTestVisible = true
                         };
-                        // We can focus this image or not
                         _subject.FireCurrentElementsEvents(CurrentElement.Image);
                     }
-                    // Here we can either switch to UndefinedState or reset all the variables
-                    //subject.SwitchState(EditorMode.Undefined);
-                    // we reset variables
                     Reset();
                 };
             }
@@ -217,14 +210,9 @@ namespace Lab3
                 };
                 _startActions[2] = (mouseDownPosition) =>
                 {
-                    //var trianglePoints = (subject.CurrentFigure as Polyline).Points;
-                    // hm... maybe some other manipulations needed before these
                     _trianglePoints.Add(mouseDownPosition);
                     var triangle = new Polygon()
                     {
-                        //Stroke = preferences.FigureStroke,
-                        //StrokeThickness = preferences.FigureStrokeThickness,
-                        //Fill = preferences.FigureFilling,
                         Focusable = true
                     };
                     triangle.Points = _trianglePoints;
@@ -234,8 +222,6 @@ namespace Lab3
                     image.Children.Remove(_subject.CurrentFigure);
                     image.Children.Add(triangle);
                     _subject.CurrentFigure = triangle;
-                    // We can focus this figure or not
-                    //subject.CurrentFigure.Focus();
                 };
                 StartAction = (mouseDownPosition) =>
                 {
@@ -652,8 +638,7 @@ namespace Lab3
                         currentMousePosition.X - _previousMousePosition.X,
                         currentMousePosition.Y - _previousMousePosition.Y
                     );
-
-                    // We won't diffenciate shapes and try doing so:
+                    
                     Canvas.SetLeft(_subject.CurrentFigure, Canvas.GetLeft(_subject.CurrentFigure) + delta.X);
                     Canvas.SetTop(_subject.CurrentFigure, Canvas.GetTop(_subject.CurrentFigure) + delta.Y);
 
@@ -786,7 +771,6 @@ namespace Lab3
                 {
                     if (_subject.CurrentImage == null)
                         return;
-                    // Maybe not adding but replacing is needed
                 };
 
                 FinishAction = (mouseUpPosition) =>
@@ -826,7 +810,6 @@ namespace Lab3
                 var secondImageChildren = secondCanvas.Children;
                 for (int i = 0; i < secondImageChildren.Count;)
                 {
-                    // Assume that CanvasLeft and top are not changed
                     var figure = (Shape)secondImageChildren[i];
                     secondImageChildren.RemoveAt(i);
                     firstImageFiguresCollection.Add(figure);
