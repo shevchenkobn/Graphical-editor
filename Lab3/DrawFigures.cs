@@ -548,7 +548,8 @@ namespace Lab3
                 {
                     if (_counter == 1)
                     {
-                        _rotateTransform = new RotateTransform(0, _centerPoint.Key.X, _centerPoint.Key.Y);
+                        var transformCenter = _subject.GetRenderTransformCenter(_centerPoint.Key);
+                        _rotateTransform = new RotateTransform(0, transformCenter.X, transformCenter.Y);
                         _subject.AddRenderTransform(_rotateTransform);
                         _counter++;
                     }
@@ -753,7 +754,8 @@ namespace Lab3
                         return;
                     if (_counter == 1)
                     {
-                        _scaleTransform = new ScaleTransform(1, 1, _centerPoint.Key.X, _centerPoint.Key.Y);
+                        var transformCenter = _subject.GetRenderTransformCenter(_centerPoint.Key);
+                        _scaleTransform = new ScaleTransform(1, 1, transformCenter.X, transformCenter.Y);
                         _subject.AddRenderTransform(_scaleTransform);
                         _counter++;
                     }

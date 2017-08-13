@@ -82,6 +82,7 @@ namespace Lab3
         bool IsOperationInProcess { get; set; }
         void FireCurrentElementsEvents(CurrentElement subject);
         void ResetCurrentElements(CurrentElement subject = CurrentElement.ImageAndFigure);
+        Point GetRenderTransformCenter(Point centerPoint);
         //void ChangeCurrentImage(Border image);
         //void ChangeCurrentFigure(Shape figure);
     }
@@ -303,6 +304,18 @@ namespace Lab3
                 self.CurrentFigure = null;
             if (_currentImage != null && subject >= CurrentElement.Image)
                 self.CurrentImage = null;
+        }
+        Point IChangeDrawingState.GetRenderTransformCenter(Point centerPoint)
+        {
+            // i'm not sure for Path class
+            if (_currentFigure is Polygon || _currentFigure is Polyline || _currentFigure is Path)
+            {
+                double imageX = Canvas.GetLeft(_currentFigure);
+                double imageY = Canvas.GetTop(_currentFigure);
+                centerPoint.X -= imageX;
+                centerPoint.Y -= imageY;
+            }
+            return centerPoint;
         }
     }
 }
