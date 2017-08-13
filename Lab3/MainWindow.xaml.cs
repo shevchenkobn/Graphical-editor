@@ -44,6 +44,7 @@ namespace Lab3
             _model.ImageCurrentStatusGot += ActivateAllButtons;
             _model.FigureCurrentStatusLost += _model_FigureCurrentStatusLost;
             _model.FigureCurrentStatusGot += _model_FigureCurrentStatusGot;
+            _model.FireCurrentElementsEvents();
 
             _statusBarOptions = new Dictionary<EditorMode, string>()
             {

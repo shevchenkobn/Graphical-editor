@@ -16,6 +16,11 @@ namespace Lab3
         RotateFigure, MoveFigure, MoveImage, ScaleFigure, MergeImages
     }
 
+    public enum FireEventSubject
+    {
+        CurrentFigure, CurrentImage, BothElements
+    }
+
     public delegate void EditorModeChangedEventHandler(IDrawingManager manager, EditorMode newMode);
     public delegate void ImageCurrentStatusChangedEventHandler(IDrawingManager manager, Border image);
     public delegate void FigureCurrentStatusChangedEventHandler(IDrawingManager manager, Shape figure);
@@ -39,6 +44,7 @@ namespace Lab3
         void DeleteCurrentFigure();
         void ClearCanvas();
         bool IsOperationInProcess { get; }
+        void FireCurrentElementsEvents(FireEventSubject subject = FireEventSubject.BothElements);
     }
     public class EditorPreferences
     {
@@ -73,6 +79,7 @@ namespace Lab3
         void MoveServicePoint(Ellipse servicePoint, Point center, Canvas imagePlot = null);
         void AddRenderTransform(Transform transfrom);
         bool IsOperationInProcess { get; set; }
+        void FireCurrentElementsEvents(FireEventSubject subject);
         //void ChangeCurrentImage(Border image);
         //void ChangeCurrentFigure(Shape figure);
     }
@@ -278,6 +285,14 @@ namespace Lab3
             self.CurrentImage = null;
             if (_canvas != null)
                 _canvas.Children.Clear();
+        }
+
+        public void FireCurrentElementsEvents(FireEventSubject subject = FireEventSubject.BothElements)
+        {
+            if (_currentFigure != null && (subject <= FireEventSubject.CurrentFigure || subject > FireEventSubject.CurrentImage))
+                FigureCurrentStatusGot?.Invoke(this, _currentFigure);
+            if (_currentImage != null && subject >= FireEventSubject.CurrentImage)
+                ImageCurrentStatusGot?.Invoke(this, _currentImage);
         }
     }
 }
