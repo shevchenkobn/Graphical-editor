@@ -16,9 +16,9 @@ namespace Lab3
         RotateFigure, MoveFigure, MoveImage, ScaleFigure, MergeImages
     }
 
-    public enum FireEventSubject
+    public enum CurrentElement
     {
-        CurrentFigure, CurrentImage, BothElements
+        Figure, Image, ImageAndFigure
     }
 
     public delegate void EditorModeChangedEventHandler(IDrawingManager manager, EditorMode newMode);
@@ -44,7 +44,8 @@ namespace Lab3
         void DeleteCurrentFigure();
         void ClearCanvas();
         bool IsOperationInProcess { get; }
-        void FireCurrentElementsEvents(FireEventSubject subject = FireEventSubject.BothElements);
+        void FireCurrentElementsEvents(CurrentElement subject = CurrentElement.ImageAndFigure);
+        void ResetCurrentElements(CurrentElement subject = CurrentElement.ImageAndFigure);
     }
     public class EditorPreferences
     {
@@ -79,7 +80,8 @@ namespace Lab3
         void MoveServicePoint(Ellipse servicePoint, Point center, Canvas imagePlot = null);
         void AddRenderTransform(Transform transfrom);
         bool IsOperationInProcess { get; set; }
-        void FireCurrentElementsEvents(FireEventSubject subject);
+        void FireCurrentElementsEvents(CurrentElement subject);
+        void ResetCurrentElements(CurrentElement subject = CurrentElement.ImageAndFigure);
         //void ChangeCurrentImage(Border image);
         //void ChangeCurrentFigure(Shape figure);
     }
@@ -287,12 +289,20 @@ namespace Lab3
                 _canvas.Children.Clear();
         }
 
-        public void FireCurrentElementsEvents(FireEventSubject subject = FireEventSubject.BothElements)
+        public void FireCurrentElementsEvents(CurrentElement subject = CurrentElement.ImageAndFigure)
         {
-            if (_currentFigure != null && (subject <= FireEventSubject.CurrentFigure || subject > FireEventSubject.CurrentImage))
+            if (_currentFigure != null && (subject <= CurrentElement.Figure || subject > CurrentElement.Image))
                 FigureCurrentStatusGot?.Invoke(this, _currentFigure);
-            if (_currentImage != null && subject >= FireEventSubject.CurrentImage)
+            if (_currentImage != null && subject >= CurrentElement.Image)
                 ImageCurrentStatusGot?.Invoke(this, _currentImage);
+        }
+        public void ResetCurrentElements(CurrentElement subject = CurrentElement.ImageAndFigure)
+        {
+            var self = this as IChangeDrawingState;
+            if (_currentFigure != null && (subject <= CurrentElement.Figure || subject > CurrentElement.Image))
+                self.CurrentFigure = null;
+            if (_currentImage != null && subject >= CurrentElement.Image)
+                self.CurrentImage = null;
         }
     }
 }

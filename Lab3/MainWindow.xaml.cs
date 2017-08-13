@@ -166,7 +166,11 @@ namespace Lab3
                 InitialDirectory = Directory.GetCurrentDirectory()
             };
             if (dialog.ShowDialog() == true)
+            {
+                _model.ResetCurrentElements();
+                _model.CurrentMode = EditorMode.SwitchElements;
                 File.WriteAllText(dialog.FileName, XamlConvert());
+            }
         }
 
         private void CanSaveContentFromCanvas(object sender, CanExecuteRoutedEventArgs e)

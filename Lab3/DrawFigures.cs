@@ -174,7 +174,7 @@ namespace Lab3
                             IsHitTestVisible = true
                         };
                         // We can focus this image or not
-                        _subject.FireCurrentElementsEvents(FireEventSubject.CurrentImage);
+                        _subject.FireCurrentElementsEvents(CurrentElement.Image);
                     }
                     // Here we can either switch to UndefinedState or reset all the variables
                     //subject.SwitchState(EditorMode.Undefined);
